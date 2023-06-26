@@ -36,7 +36,7 @@ func GetBookById(c *gin.Context) {
 
 func CreateBook(c *gin.Context) {
 	CreateBook := &models.Book{}
-	utils.ParseBody(c.Request, CreateBook)
+	utils.ParseBody(c, CreateBook)
 	b := CreateBook.CreateBook()
 	res, _ := json.Marshal(b)
 	c.Writer.Header().Set("Content-Type", "application/json")
@@ -59,7 +59,7 @@ func DeleteBook(c *gin.Context) {
 
 func UpdateBook(c *gin.Context) {
 	var updateBook = &models.Book{}
-	utils.ParseBody(c.Request, updateBook)
+	utils.ParseBody(c, updateBook)
 	bookId := c.Param("bookId")
 	ID, err := strconv.ParseInt(bookId, 0, 0)
 	if err != nil {
