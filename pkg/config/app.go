@@ -1,19 +1,21 @@
 package config
 
 import (
+	"log"
+
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var (
-	db *gorm.DB
-)
+var db *gorm.DB
 
 func Connect() {
-	d, err := gorm.Open("postgresql", "cekret:gopher/bookapp?charset=utf8&parseTime=True&")
+	dsn := "host=localhost user=postgres password=gopher dbname=bookapp port=5432 sslmode=disable TimeZone=Asia/Kazakhstan"
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	db = d
 }
 
 func GetDB() *gorm.DB {
