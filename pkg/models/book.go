@@ -1,20 +1,21 @@
 package models
 
 import (
+	"github.com/Cekretik/BookApp/cmd/main/pkg/config"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 
 type Book struct {
-	Id      int
-	Author  string
-	Release int
-	Name    string
+	gorm.model
+	Name    string `json:"name"`
+	Author  string `json:"author"`
+	Release int    `json:"release"`
 }
 
-var Books = []Book{
-	{Id: 1, Author: "Author 1", Release: 2000, Name: "Book 1"},
-	{Id: 2, Author: "Author 2", Release: 2011, Name: "Book 2"},
-	{Id: 3, Author: "Author 3", Release: 2002, Name: "Book 3"},
+func init() {
+	config.Connect()
+	db = config.GetDB()
+	db.AutoMigrate(&Book{})
 }
