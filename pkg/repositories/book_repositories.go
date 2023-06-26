@@ -75,12 +75,7 @@ func UpdateBook(c *gin.Context) {
 	if updateBook.Release != "" {
 		bookDetails.Release = updateBook.Release
 	}
-
-	err = db.Save(&bookDetails).Error
-	if err != nil {
-		fmt.Println("error while saving book details")
-	}
-
+	db.Save(&bookDetails)
 	res, _ := json.Marshal(bookDetails)
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(http.StatusOK)
