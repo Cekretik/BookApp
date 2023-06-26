@@ -2,13 +2,13 @@ package utils
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ParseBody(c *gin.Context, x interface{}) {
-	body, err := ioutil.ReadAll(c.Request.Body)
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		return
 	}
