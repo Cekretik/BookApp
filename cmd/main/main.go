@@ -6,8 +6,10 @@ import (
 )
 
 func main() {
-	r := gin.Default()
+	router := gin.Default()
+
 	routes.BookAppRoutes()
-	r.GET("/route")
-	r.Run("localhost:5432")
+	router.GET("/route", func(c *gin.Context) {})
+
+	router.Run("localhost:5432")
 }
