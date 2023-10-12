@@ -7,7 +7,13 @@ type User struct {
 	Email    string `gorm:"column:email" json:"email"`
 }
 
-func CreateUser(user *User) (*User, error) {
+type APIResponse struct {
+	Status  int
+	Message string
+	Data    interface{}
+}
+
+func CreateUserFromDB(user *User) (*User, error) {
 	result := db.Create(&user)
 	if result.Error != nil {
 		return nil, result.Error
@@ -15,7 +21,7 @@ func CreateUser(user *User) (*User, error) {
 	return user, nil
 }
 
-func GetUserById(id uint) (*User, error) {
+func GetUserByIDFromDB(id uint) (*User, error) {
 	var user User
 	result := db.Where("id = ?", id).First(&user)
 	if result.Error != nil {
@@ -24,7 +30,7 @@ func GetUserById(id uint) (*User, error) {
 	return &user, nil
 }
 
-func GetAllUsers() ([]User, error) {
+func GetAllUsersFromDB() ([]User, error) {
 	var users []User
 	result := db.Find(&users)
 	if result.Error != nil {
@@ -33,7 +39,7 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func UpdateUser(user *User) (*User, error) {
+func UpdateUserFromDB(user *User) (*User, error) {
 	result := db.Save(user)
 	if result.Error != nil {
 		return nil, result.Error
@@ -41,10 +47,84 @@ func UpdateUser(user *User) (*User, error) {
 	return user, nil
 }
 
-func DeleteUser(ID uint) error {
+func DeleteUserFromDB(ID uint) error {
 	result := db.Delete(&User{}, ID)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
+}
+
+func CreateUser(user *User) APIResponse {
+	user, err := CreateUserFromDB(user)
+	if err != nil {
+		return APIResponse{
+			Status:  500,
+			Message: "Failed to create user",
+		}
+	}
+	return APIResponse{
+		Status:  200,
+		Message: "Success",
+		Data:    user,
+	}
+}
+
+func GetUserByID(id uint) APIResponse {
+	user, err := GetUserByIDFromDB(id)
+	if err != nil {
+		return APIResponse{
+			Status:  404,
+			Message: "User not found",
+		}
+	}
+	return APIResponse{
+		Status:  200,
+		Message: "Success",
+		Data:    user,
+	}
+}
+
+func GetAllUsers() APIResponse {
+	users, err := GetAllUsersFromDB()
+	if err != nil {
+		return APIResponse{
+			Status:  500,
+			Message: "Failed to get all users",
+		}
+	}
+	return APIResponse{
+		Status:  200,
+		Message: "Success",
+		Data:    users,
+	}
+}
+
+func UpdateUser(user *User) APIResponse {
+	user, err := UpdateUserFromDB(user)
+	if err != nil {
+		return APIResponse{
+			Status:  500,
+			Message: "Failed to update user",
+		}
+	}
+	return APIResponse{
+		Status:  200,
+		Message: "Success",
+		Data:    user,
+	}
+}
+
+func DeleteUser(ID uint) APIResponse {
+	err := DeleteUserFromDB(ID)
+	if err != nil {
+		return APIResponse{
+			Status:  500,
+			Message: "Failed to delete user",
+		}
+	}
+	return APIResponse{
+		Status:  200,
+		Message: "Success",
+	}
 }
