@@ -7,9 +7,8 @@ import (
 
 func main() {
 	router := gin.Default()
-
-	routes.BookAppRoutes()
+	routes.BookAppRoutes(router)
 	router.GET("/route", func(c *gin.Context) {})
-
-	router.Run("localhost:5432")
+	routes.UserRoutes(router)
+	router.Run(":5432")
 }

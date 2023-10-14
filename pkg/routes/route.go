@@ -20,7 +20,7 @@ var BookAppRoutes = func() *gin.Engine {
 	return router
 }
 
-var userRoutes = func() *gin.Engine {
+var UserRoutes = func() *gin.Engine {
 	router := gin.Default()
 
 	router.POST("/users", func(c *gin.Context) {
