@@ -39,12 +39,12 @@ func GetAllUsersFromDB() ([]User, error) {
 	return users, nil
 }
 
-func UpdateUserFromDB(user *User) (*User, error) {
-	result := db.Save(user)
+func UpdateUserFromDB(ID uint) error {
+	result := db.Save(ID)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return user, nil
+	return nil
 }
 
 func DeleteUserFromDB(ID uint) error {
@@ -100,8 +100,8 @@ func GetAllUsers() APIResponse {
 	}
 }
 
-func UpdateUser(user *User) APIResponse {
-	user, err := UpdateUserFromDB(user)
+func UpdateUser(ID uint) APIResponse {
+	err := UpdateUserFromDB(ID)
 	if err != nil {
 		return APIResponse{
 			Status:  500,
@@ -111,7 +111,7 @@ func UpdateUser(user *User) APIResponse {
 	return APIResponse{
 		Status:  200,
 		Message: "Success",
-		Data:    user,
+		Data:    ID,
 	}
 }
 
