@@ -103,6 +103,11 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "You have successfully registered", "details": err.Error()})
 }
 
+func logOut(c *gin.Context) {
+	c.SetCookie("token", "", -1, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "You have successfully logged out"})
+}
+
 func getUserByUsername(username string) (*User, error) {
 	var user User
 	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
