@@ -9,18 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var BookAppRoutes = func() *gin.Engine {
+func BookAppRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.POST("/book", repositories.CreateBook)
 	router.GET("/book", repositories.GetBook)
-	router.GET("/book{bookId}", repositories.GetBookById)
-	router.PUT("/book{bookId}", repositories.UpdateBook)
-	router.DELETE("/book{bookId}", repositories.DeleteBook)
+	router.GET("/book/:bookId", repositories.GetBookById)
+	router.PUT("/book/:bookId", repositories.UpdateBook)
+	router.DELETE("/book/:bookId", repositories.DeleteBook)
 	return router
 }
 
-var UserRoutes = func() *gin.Engine {
+func UserRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.POST("/users", func(c *gin.Context) {
@@ -59,22 +59,6 @@ var UserRoutes = func() *gin.Engine {
 			return
 		}
 		c.JSON(response.Status, response)
-
-	})
-
-	router.GET("/users/:id", func(c *gin.Context) {
-		idStr := c.Param("id")
-		id, err := strconv.ParseUint(idStr, 10, 32)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID", "details": err.Error()})
-			return
-		}
-
-		response := models.GetUserByID(uint(id))
-		if response.Status != 200 || response.Data == nil {
-			c.JSON(response.Status, gin.H{"error": "User not found", "details": response.Message})
-			return
-		}
 	})
 
 	router.DELETE("/users/:id", func(c *gin.Context) {
