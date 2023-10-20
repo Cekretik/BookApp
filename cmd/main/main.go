@@ -7,8 +7,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	routes.BookAppRoutes(router)
-	router.GET("/route", func(c *gin.Context) {})
-	routes.UserRoutes(router)
-	router.Run(":5432")
+	routes.BookAppRoutes().Run(":8080")
+	routes.UserRoutes().Run(":8080")
+	router.Run(":8080")
 }
