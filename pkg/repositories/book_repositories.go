@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,69 +13,67 @@ var NewBook models.Book
 
 func GetBook(c *gin.Context) {
 	newBooks := models.GetAllBooks()
-	res, _ := json.Marshal(newBooks)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(res)
+	if newBooks == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get books"})
+		return
+	}
+	c.JSON(http.StatusOK, newBooks)
 }
 
 func GetBookById(c *gin.Context) {
 	bookId := c.Param("bookId")
-	ID, err := strconv.ParseInt(bookId, 0, 0)
+	ID, err := strconv.Atoi(bookId)
 	if err != nil {
-		fmt.Println("error while parsing")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID", "details": err.Error()})
+		return
 	}
-	bookDetails, _ := models.GetBookById(ID)
-	res, _ := json.Marshal(bookDetails)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(res)
+
+	bookDetails, err := models.GetBookById(uint(ID))
+
+	c.JSON(http.StatusOK, bookDetails)
 }
 
 func CreateBook(c *gin.Context) {
-	CreateBook := &models.Book{}
-	utils.ParseBody(c, CreateBook)
-	b := CreateBook.CreateBook()
-	res, _ := json.Marshal(b)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(res)
+	createBook := &models.Book{}
+	if err := c.ShouldBindJSON(createBook); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON provided", "details": err.Error()})
+		return
+	}
+	createdBook := createBook.CreateBook()
+	if createdBook == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create book"})
+		return
+	}
+	c.JSON(http.StatusOK, createdBook)
 }
 
 func DeleteBook(c *gin.Context) {
 	bookId := c.Param("bookId")
-	ID, err := strconv.ParseInt(bookId, 0, 0)
+	ID, err := strconv.Atoi(bookId)
 	if err != nil {
-		fmt.Println("error while parsing")
+		respondWithError(c, http.StatusBadRequest, "Invalid ID", err)
+		return
 	}
-	book := models.DeleteBook(ID)
-	res, _ := json.Marshal(book)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(res)
+
+	err = models.DeleteBook(uint(ID))
+	respondWithMessage(c, http.StatusOK, "Book deleted successfully")
 }
 
 func UpdateBook(c *gin.Context) {
-	var updateBook = &models.Book{}
-	utils.ParseBody(c, updateBook)
+	var requestBook models.Book
+	utils.ParseBody(c, &requestBook)
+
 	bookId := c.Param("bookId")
-	ID, err := strconv.ParseInt(bookId, 0, 0)
+	ID, err := strconv.Atoi(bookId)
 	if err != nil {
-		fmt.Println("error while parsing")
+		respondWithError(c, http.StatusBadRequest, "Invalid ID", err)
+		return
 	}
-	bookDetails, db := models.GetBookById(ID)
-	if updateBook.Name != "" {
-		bookDetails.Name = updateBook.Name
+	_, err = models.GetBookById(uint(ID))
+	if err != nil {
+		respondWithError(c, http.StatusInternalServerError, "Failed to update book", err)
+		return
 	}
-	if updateBook.Author != "" {
-		bookDetails.Author = updateBook.Author
-	}
-	if updateBook.Release != "" {
-		bookDetails.Release = updateBook.Release
-	}
-	db.Save(&bookDetails)
-	res, _ := json.Marshal(bookDetails)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(res)
+
+	respondWithMessage(c, http.StatusOK, "Book updated successfully")
 }

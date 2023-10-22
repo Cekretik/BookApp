@@ -1,21 +1,21 @@
 package models
 
 import (
+	"github.com/Cekretik/BookApp/cmd/main/pkg/config"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	ID       uint   `gorm:"column:id" json:"id"`
-	Username string `gorm:"column:username" json:"username"`
+	Username string `gorm:"column:username;unique_index" json:"username"`
 	Password string `gorm:"column:password" json:"password"`
-	Email    string `gorm:"column:email" json:"email"`
+	Email    string `gorm:"column:email;unique_index" json:"email"`
 }
 
-type APIResponse struct {
-	Status  int
-	Message string
-	Data    interface{}
+func init() {
+	config.Connect()
+	db = config.GetDB()
+	db.AutoMigrate(&User{})
 }
 
 func CreateUserFromDB(user *User) (*User, error) {
@@ -25,7 +25,6 @@ func CreateUserFromDB(user *User) (*User, error) {
 	}
 	return user, nil
 }
-
 func GetUserByIDFromDB(id uint) (*User, error) {
 	var user User
 	result := db.Where("id = ?", id).First(&user)
@@ -44,11 +43,28 @@ func GetAllUsersFromDB() ([]User, error) {
 	return users, nil
 }
 
-func UpdateUserFromDB(ID uint) error {
-	result := db.Save(ID)
+func UpdateUserFromDB(ID uint, userToUpdate *User) error {
+	var existingUser User
+	result := db.First(&existingUser, ID)
 	if result.Error != nil {
 		return result.Error
 	}
+
+	if userToUpdate.Username != "" {
+		existingUser.Username = userToUpdate.Username
+	}
+	if userToUpdate.Password != "" {
+		existingUser.Password = userToUpdate.Password
+	}
+	if userToUpdate.Email != "" {
+		existingUser.Email = userToUpdate.Email
+	}
+
+	result = db.Save(&existingUser)
+	if result.Error != nil {
+		return result.Error
+	}
+
 	return nil
 }
 
@@ -58,78 +74,4 @@ func DeleteUserFromDB(ID uint) error {
 		return result.Error
 	}
 	return nil
-}
-
-func CreateUser(user *User) APIResponse {
-	user, err := CreateUserFromDB(user)
-	if err != nil {
-		return APIResponse{
-			Status:  500,
-			Message: "Failed to create user",
-		}
-	}
-	return APIResponse{
-		Status:  200,
-		Message: "Success",
-		Data:    user,
-	}
-}
-
-func GetUserByID(id uint) APIResponse {
-	user, err := GetUserByIDFromDB(id)
-	if err != nil {
-		return APIResponse{
-			Status:  404,
-			Message: "User not found",
-		}
-	}
-	return APIResponse{
-		Status:  200,
-		Message: "Success",
-		Data:    user,
-	}
-}
-
-func GetAllUsers() APIResponse {
-	users, err := GetAllUsersFromDB()
-	if err != nil {
-		return APIResponse{
-			Status:  500,
-			Message: "Failed to get all users",
-		}
-	}
-	return APIResponse{
-		Status:  200,
-		Message: "Success",
-		Data:    users,
-	}
-}
-
-func UpdateUser(ID uint) APIResponse {
-	err := UpdateUserFromDB(ID)
-	if err != nil {
-		return APIResponse{
-			Status:  500,
-			Message: "Failed to update user",
-		}
-	}
-	return APIResponse{
-		Status:  200,
-		Message: "Success",
-		Data:    ID,
-	}
-}
-
-func DeleteUser(ID uint) APIResponse {
-	err := DeleteUserFromDB(ID)
-	if err != nil {
-		return APIResponse{
-			Status:  500,
-			Message: "Failed to delete user",
-		}
-	}
-	return APIResponse{
-		Status:  200,
-		Message: "Success",
-	}
 }

@@ -14,6 +14,11 @@ type Book struct {
 	Release string `gorm:"column:release" json:"release"`
 }
 
+// Error implements error.
+func (Book) Error() string {
+	panic("unimplemented")
+}
+
 func init() {
 	config.Connect()
 	db = config.GetDB()
@@ -34,14 +39,39 @@ func GetAllBooks() []Book {
 	return Books
 }
 
-func GetBookById(id int64) (*Book, *gorm.DB) {
+func GetBookById(id uint) (*Book, error) {
 	var getBook Book
 	db := db.Where("ID = ?", id).Find(&getBook)
-	return &getBook, db
+	return &getBook, db.Error
 }
 
-func DeleteBook(ID int64) Book {
+func DeleteBook(ID uint) Book {
 	var book Book
 	db.Where("ID = ?", ID).Delete(&book)
 	return book
+}
+
+func UpdateBook(ID uint, updatedBook *Book) error {
+	var existingBook Book
+	db := db.First(&existingBook, ID)
+	if db.Error != nil {
+		return db.Error
+	}
+
+	if updatedBook.Name != "" {
+		existingBook.Name = updatedBook.Name
+	}
+	if updatedBook.Author != "" {
+		existingBook.Author = updatedBook.Author
+	}
+	if updatedBook.Release != "" {
+		existingBook.Release = updatedBook.Release
+	}
+
+	db = db.Save(&existingBook)
+	if db.Error != nil {
+		return db.Error
+	}
+
+	return nil
 }

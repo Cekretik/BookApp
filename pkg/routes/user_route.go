@@ -6,29 +6,16 @@ import (
 
 	"github.com/Cekretik/BookApp/cmd/main/pkg/models"
 	"github.com/Cekretik/BookApp/cmd/main/pkg/repositories"
+	"github.com/Cekretik/BookApp/cmd/main/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
-
-func BookAppRoutes() *gin.Engine {
-	router := gin.Default()
-
-	router.POST("/book", repositories.CreateBook)
-	router.GET("/book", repositories.GetBook)
-	router.GET("/book/:bookId", repositories.GetBookById)
-	router.PUT("/book/:bookId", repositories.UpdateBook)
-	router.DELETE("/book/:bookId", repositories.DeleteBook)
-	return router
-}
 
 func UserRoutes() *gin.Engine {
 	router := gin.Default()
 
-	router.POST("/users", func(c *gin.Context) {
-		var user models.User
-		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON provided", "details": err.Error()})
-			return
-		}
+	router.POST("/users", repositories.CreateUser, func(c *gin.Context) {
+		user := models.User{}
+		utils.ParseBody(c, &user)
 		response := models.CreateUser(&user)
 		if response.Status != 200 {
 			c.JSON(response.Status, gin.H{"error": "Failed to create user", "details": response.Message})
@@ -37,7 +24,7 @@ func UserRoutes() *gin.Engine {
 		c.JSON(response.Status, response)
 	})
 
-	router.GET("/users/:id", func(c *gin.Context) {
+	router.GET("/users/:id", repositories.GetUserByID, func(c *gin.Context) {
 		idStr := c.Param("id")
 		id, err := strconv.ParseUint(idStr, 10, 32)
 		if err != nil {
@@ -52,7 +39,7 @@ func UserRoutes() *gin.Engine {
 		c.JSON(response.Status, response)
 	})
 
-	router.GET("/users", func(c *gin.Context) {
+	router.GET("/users", repositories.GetAllUsers, func(c *gin.Context) {
 		response := models.GetAllUsers()
 		if response.Status != 200 {
 			c.JSON(response.Status, gin.H{"error": "Failed to get all users", "details": response.Message})
@@ -61,7 +48,7 @@ func UserRoutes() *gin.Engine {
 		c.JSON(response.Status, response)
 	})
 
-	router.DELETE("/users/:id", func(c *gin.Context) {
+	router.DELETE("/users/:id", repositories.DeleteUser, func(c *gin.Context) {
 		idStr := c.Param("id")
 		id, err := strconv.ParseUint(idStr, 10, 32)
 		if err != nil {
@@ -76,17 +63,11 @@ func UserRoutes() *gin.Engine {
 		c.JSON(response.Status, response)
 	})
 
-	router.PUT("/users/:id", func(c *gin.Context) {
+	router.PUT("/users/:id", repositories.UpdateUser, func(c *gin.Context) {
 		idStr := c.Param("id")
 		id, err := strconv.ParseUint(idStr, 10, 32)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID", "details": err.Error()})
-			return
-		}
-
-		var userToUpdate models.User
-		if err := c.ShouldBindJSON(&userToUpdate); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON provided", "details": err.Error()})
+		if err != nil || id == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID", "details": "Invalid or missing user ID"})
 			return
 		}
 

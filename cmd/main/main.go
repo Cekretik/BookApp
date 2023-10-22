@@ -7,7 +7,9 @@ import (
 
 func main() {
 	router := gin.Default()
-	routes.BookAppRoutes().Run(":8080")
-	routes.UserRoutes().Run(":8080")
-	router.Run(":8080")
+
+	go routes.BookAppRoutes().Run(":8080")
+	go routes.UserRoutes().Run(":8081")
+
+	router.Run(":8082")
 }
